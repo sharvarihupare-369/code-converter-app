@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
-  console.log(request, "request");
+ 
   try {
-    console.log("✅ API called");
-    console.log("API URL:", process.env.NEXT_PUBLIC_GEMINI_API_URL);
-    console.log("API Key:", process.env.NEXT_PUBLIC_API_KEY);
-
     // 1. Get data from the client (the frontend form)
     const data = await request.json();
     const { inputCode, inputLang, outputLang } = data;
