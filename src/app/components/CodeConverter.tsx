@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
+import Editor from "@monaco-editor/react";
 
 const LANGUAGES = [
   "Python", "JavaScript", "TypeScript", "Java", "C#", "Go", "Rust", "C++", "PHP", "Swift"
@@ -103,44 +104,75 @@ export default function CodeConverter() {
         <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
           {/* Language Selectors */}
           <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 p-4 sm:p-6 border-b border-white/10">
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              {/* Source Language */}
-              <div className="w-full sm:w-auto">
-                <label className="block text-sm font-medium text-gray-300 mb-2">Source Language</label>
-                <select 
-                  value={inputLang} 
-                  onChange={(e) => setInputLang(e.target.value)}
-                  className="cursor-pointer w-full sm:w-48 px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition"
+            <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
+              {/* Left Spacer */}
+              <div className="hidden sm:block flex-1"></div>
+              
+              {/* Language Selectors (Centered) */}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                {/* Source Language */}
+                <div className="w-full sm:w-auto">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Source Language</label>
+                  <select 
+                    value={inputLang} 
+                    onChange={(e) => setInputLang(e.target.value)}
+                    className="cursor-pointer w-full sm:w-48 px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition"
+                  >
+                    {LANGUAGES?.map(lang => (
+                      <option key={lang} value={lang} className="cursor-pointer bg-slate-800">{lang}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Swap Button */}
+                <button
+                  onClick={swapLanguages}
+                  className="mt-6 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-all transform hover:scale-110 hover:rotate-180 duration-300"
+                  title="Swap languages"
                 >
-                  {LANGUAGES?.map(lang => (
-                    <option key={lang} value={lang} className="cursor-pointer bg-slate-800">{lang}</option>
-                  ))}
-                </select>
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                  </svg>
+                </button>
+
+                {/* Target Language */}
+                <div className="w-full sm:w-auto">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Target Language</label>
+                  <select 
+                    value={outputLang} 
+                    onChange={(e) => setOutputLang(e.target.value)}
+                    className="cursor-pointer w-full sm:w-48 px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition"
+                  >
+                    {LANGUAGES.map(lang => (
+                      <option key={lang} value={lang} className="bg-slate-800">{lang}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
-              {/* Swap Button */}
-              <button
-                onClick={swapLanguages}
-                className="mt-6 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-all transform hover:scale-110 hover:rotate-180 duration-300"
-                title="Swap languages"
-              >
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                </svg>
-              </button>
-
-              {/* Target Language */}
-              <div className="w-full sm:w-auto">
-                <label className="block text-sm font-medium text-gray-300 mb-2">Target Language</label>
-                <select 
-                  value={outputLang} 
-                  onChange={(e) => setOutputLang(e.target.value)}
-                  className="cursor-pointer w-full sm:w-48 px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition"
-                >
-                  {LANGUAGES.map(lang => (
-                    <option key={lang} value={lang} className="bg-slate-800">{lang}</option>
-                  ))}
-                </select>
+              {/* Convert Button (Right Corner) */}
+              <div className="flex-1 flex justify-end">
+                <div className="w-full sm:w-auto mt-6">
+                  <button
+                    onClick={convertCode}
+                    disabled={isLoading || !inputCode.trim()}
+                    className="group relative px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg hover:shadow-xl overflow-hidden flex items-center gap-2"
+                  >
+                    {isLoading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                        Converting...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        Convert Code
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -153,15 +185,22 @@ export default function CodeConverter() {
                 <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">Input Code</h3>
                 <span className="text-xs text-gray-400 bg-white/5 px-3 py-1 rounded-full">{inputLang}</span>
               </div>
-              <div className="relative">
-                <textarea
-                  rows={20}
-                  placeholder="// Paste your source code here..."
-                  className="w-full p-4 bg-slate-900/50 border border-white/10 rounded-xl text-sm text-gray-200 font-mono resize-none outline-none focus:ring-2 focus:ring-purple-500 transition placeholder:text-gray-500"
-                  value={inputCode}
-                  onChange={(e) => setInputCode(e.target.value)}
-                  spellCheck={false}
-                />
+              <div className="relative bg-slate-900/50 border border-white/10 rounded-xl overflow-hidden" style={{ height: '450px' }}>
+                <div className="p-4">
+                  <Editor
+                    height="418px"
+                    theme="vs-dark"
+                    language={inputLang.toLowerCase()}
+                    value={inputCode}
+                    onChange={(value) => setInputCode(value || "")}
+                    options={{
+                      minimap: { enabled: false },
+                      fontSize: 14,
+                      automaticLayout: true,
+                      padding: { top: 16, bottom: 16 },
+                    }}
+                  />
+                </div>
                 {inputCode && (
                   <button
                     onClick={() => setInputCode('')}
@@ -203,7 +242,7 @@ export default function CodeConverter() {
                   )}
                 </div>
               </div>
-              <div className="relative bg-slate-900/50 border border-white/10 rounded-xl overflow-hidden" style={{ minHeight: '450px' }}>
+              <div className="relative bg-slate-900/50 border border-white/10 rounded-xl overflow-hidden" style={{ height: '450px' }}>
                 {isLoading ? (
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-center">
@@ -213,9 +252,23 @@ export default function CodeConverter() {
                   </div>
                 ) : outputCode ? (
                   <div className="overflow-auto max-h-[450px] p-4">
-                    <pre className="text-sm font-mono text-gray-200 whitespace-pre-wrap break-words">
+                    {/* <pre className="text-sm font-mono text-gray-200 whitespace-pre-wrap break-words">
                       <code>{outputCode}</code>
-                    </pre>
+                    </pre> */}
+                    <Editor
+  height="418px"
+  theme="vs-dark"
+  language={outputLang.toLowerCase()}
+  value={outputCode}
+  options={{
+    readOnly: true,
+    minimap: { enabled: false },
+    fontSize: 14,
+    automaticLayout: true,
+    padding: { top: 16, bottom: 16 },
+  }}
+/>
+
                   </div>
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center text-gray-500 text-sm">
@@ -234,29 +287,6 @@ export default function CodeConverter() {
           {/* Action Section */}
           <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 p-6 border-t border-white/10">
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <button
-                onClick={convertCode}
-                disabled={isLoading || !inputCode.trim()}
-                className="group relative px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg hover:shadow-xl overflow-hidden"
-              >
-                <span className="relative z-10 flex items-center gap-2">
-                  {isLoading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-                      Converting...
-                    </>
-                  ) : (
-                    <div className='cursor-pointer flex items-center gap-2'>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
-                      Convert Code
-                    </div>
-                  )}
-                </span>
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 opacity-0 group-hover:opacity-20 transition-opacity"></div>
-              </button>
-              
               {statusMessage && (
                 <div className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
                   statusMessage.includes('✅') 
